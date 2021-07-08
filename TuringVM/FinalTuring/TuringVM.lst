@@ -1,0 +1,211 @@
+0 0:                                .start main
+1 0:  8 95 88 88 46 89 89 89 43     tape: .string "_XX.YYY+"
+2 9:                                ;      cs ic ns oc d
+3 9:  0 95 0 95 1                   tuples: .tuple \0 _ 0 _ r\
+4 14:  0 88 0 65 1                  .tuple \0 X 0 A r\
+5 19:  0 46 0 46 1                  .tuple \0 . 0 . r\
+6 24:  0 89 0 66 1                  .tuple \0 Y 0 B r\
+7 29:  0 43 1 43 -1                 .tuple \0 + 1 + l\
+8 34:  1 66 1 68 -1                 .tuple \1 B 1 D l\
+9 39:  1 46 1 46 -1                 .tuple \1 . 1 . l\
+10 44:  1 65 1 67 -1                .tuple \1 A 1 C l\
+11 49:  8                           tupleAmount: .integer #8
+12 50:  8                           tapeSize:    .integer #8
+13 51:  0                           iniState:    .integer #0
+14 52:  0                           iniHead:     .integer #0
+15 53:  0                           stepCount:   .integer #0
+16 54:  18 87 101 108 99 111 109 10 welcomeMsg:  .string "Welcome to Turing!"
+17 73:  15 73 110 105 116 105 97 10 iniStateMsg: .string "Initial State: "
+18 89:  19 73 110 105 116 105 97 10 iniHeadMsg:  .string "Initial Tape Head: "
+19 109:  14 73 110 105 116 105 97 1 iniTapeMsg:  .string "Initial Tape: "
+20 124:  19 84 117 114 105 110 103  finalMsg:    .string "Turing run complete"
+21 144:  8 84 117 112 108 101 115 5 tuplesMsg:   .string "Tuples: "
+22 153:  12 70 105 110 97 108 32 84 tapeMsg:     .string "Final Tape: "
+23 166:  10 84 104 97 116 32 116 11 stepMsg:     .string "That took "
+24 177:  6 32 115 116 101 112 115   stepMsg2:    .string " steps"
+25 184:                             setDefaults:
+26 184:  8 51 5                     movmr iniState r5
+27 187:  8 52 6                     movmr iniHead r6
+28 190:  12 1 6                     addir #1 r6             ; 1 needs to be added because tape is a string (length goes first and then characters in a string)
+29 193:  6 5 0                      movrr r5 r0             ; Set Initial State
+30 196:  6 6 1                      movrr r6 r1             ; Set Initial Head (1 for beginning of tape)
+31 199:  40                         ret
+32 200:                             main:
+33 200:  39 385                     jsr introPrint
+34 202:  39 184                     jsr setDefaults
+35 204:  28 206                     jmp linearSearch
+36 206:                             ;;;;;;;;;;;;;;;;;;;;;;;;linearSearch;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+37 206:                             linearSearch:
+38 206:                             ; Set memory locations of the elements of the first tuple
+39 206:  5 0 2                      movir #0  r2            ; Start count at 0
+40 209:  5 9 3                      movir #9  r3            ; Set to the first element of the first tuple (current state)
+41 212:  5 10 4                     movir #10 r4            ; Set to the input character
+42 215:  5 11 7                     movir #11 r7            ; Set to the new state
+43 218:  5 12 8                     movir #12 r8            ; Set to the output character
+44 221:  5 13 9                     movir #13 r9            ; Set to the direction
+45 224:                             ;;;;;;;;;;;;;;;;;;;;;;;;linearSearch;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+46 224:                             dw01:
+47 224:  9 3 5                      movxr r3 r5         ; Set actual current state
+48 227:  9 4 6                      movxr r4 r6         ; Set actual input character
+49 230:                             ; printi r9
+50 230:                             ; outci #10
+51 230:  35 49 2                    cmpmr tupleAmount r2 ;if tupleAmount == counter
+52 233:  37 420                     jmpz endPrgrm   ;       go to endPrgrm
+53 235:  34 0 5                     cmprr r0 r5         ; if currentState == tuple.currentState
+54 238:  37 242                     jmpz checkICharCall  ;       checkIChar
+55 240:  28 274                     jmp add
+56 242:                             checkICharCall:
+57 242:  39 246                     jsr checkIChar
+58 244:  28 274                     jmp add
+59 246:                             ;;;;;;;;;;;;;;;;;;;;;;;;dw01;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+60 246:                             ;;;;;;;;;;;;;;;;;;;;;;;;checkIChar;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+61 246:                             ; r5 holds the actual character on the tape
+62 246:                             ; r5 will hold the new state and output character if input characters match
+63 246:                             checkIChar:
+64 246:  9 1 5                      movxr r1 r5         ; Set r5 to be the actual character on the tape
+65 249:  34 5 6                     cmprr r5 r6         ; if inputCharacter != tuple.inputCharacter
+66 252:  57 273                     jmpne return    ;       return;
+67 254:  9 7 5                      movxr r7 r5     ;       Move new state into r5
+68 257:  6 5 0                      movrr r5 r0     ;       Set the new state in r0
+69 260:  9 8 5                      movxr r8 r5     ;       Move output character into r5
+70 263:  53 5 1                     movrx r5 r1     ;       Set the character in tape[r1]
+71 266:  15 9 1                     addxr r9 r1     ;       Move the head by whatever is in memory[r9]
+72 269:  39 294                     jsr stepCounter
+73 271:  28 206                     jmp linearSearch
+74 273:  40                         return: ret         ;       return
+75 274:                             ;;;;;;;;;;;;;;;;;;;;;;;;checkIChar;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+76 274:                             ;;;;;;;;;;;;;;;;;;;;;;;;add;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+77 274:                             add:
+78 274:  12 1 2                     addir #1 r2         ; Increment the count by 1
+79 277:  12 5 3                     addir #5 r3         ; Increment location of the current state
+80 280:  12 5 4                     addir #5 r4         ; Increment the location of the input character
+81 283:  12 5 7                     addir #5 r7         ; Increment the location of the new state
+82 286:  12 5 8                     addir #5 r8         ; Increment the location of the output character
+83 289:  12 5 9                     addir #5 r9         ; Increment the location of the direction
+84 292:  28 224                     jmp dw01
+85 294:                             ;;;;;;;;;;;;;;;;;;;;;;;;add;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+86 294:                             ;;;;;;;;;;;;;;;;;;;;;;;;stepCounter;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+87 294:                             ;r5 holds the stepCount
+88 294:                             stepCounter:
+89 294:  8 53 5                     movmr stepCount r5
+90 297:  12 1 5                     addir #1 r5
+91 300:  7 5 53                     movrm r5 stepCount
+92 303:  40                         ret
+93 304:                             ;;;;;;;;;;;;;;;;;;;;;;;;stepCounter;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+94 304:                             ;;;;;;;;;;;;;;;;;;;;;;;;linearSearch;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+95 304:                             ;;;;;;;;;;;;;;;;;;;;;;;;printTuples;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+96 304:                             ; r0 holds the current tuple
+97 304:                             ; r1 holds the memory location of the current state of the tuple
+98 304:                             ; r2 holds the memory location of the input character of the tuple
+99 304:                             ; r3 holds the memory location of the new state of the tuple
+100 304:                            ; r4 holds the memory location of the output character of the tuple
+101 304:                            ; r5 holds the memory location of the direction of the tuple
+102 304:                            ; r6 holds the actual current state of the tuple
+103 304:                            ; r7 holds the actual new state of the tuple
+104 304:                            ; r8 holds the actual direction of the tuple
+105 304:                            printTuples:
+106 304:  5 0 0                     movir #0  r0
+107 307:  5 9 1                     movir #9  r1
+108 310:  5 10 2                    movir #10 r2
+109 313:  5 11 3                    movir #11 r3
+110 316:  5 12 4                    movir #12 r4
+111 319:  5 13 5                    movir #13 r5
+112 322:  55 144                    outs tuplesMsg
+113 324:  44 10                     outci #10
+114 326:                            dw02:
+115 326:  9 1 6                     movxr r1 r6
+116 329:  9 3 7                     movxr r3 r7
+117 332:  9 5 8                     movxr r5 r8
+118 335:  35 49 0                   cmpmr tupleAmount r0
+119 338:  37 382                    jmpz ew02
+120 340:  49 6                      printi r6       ; Print out the current state
+121 342:  44 32                     outci #32
+122 344:  46 2                      outcx r2        ; Print out the input character
+123 346:  44 32                     outci #32
+124 348:  49 7                      printi r7       ; Print out the new state
+125 350:  44 32                     outci #32
+126 352:  46 4                      outcx r4        ; Print out the output character
+127 354:  44 32                     outci #32
+128 356:  49 8                      printi r8       ; Print out the direction
+129 358:  44 32                     outci #32
+130 360:  44 10                     outci #10
+131 362:  12 1 0                    addir #1 r0
+132 365:  12 5 1                    addir #5 r1
+133 368:  12 5 2                    addir #5 r2
+134 371:  12 5 3                    addir #5 r3
+135 374:  12 5 4                    addir #5 r4
+136 377:  12 5 5                    addir #5 r5
+137 380:  28 326                    jmp dw02
+138 382:                            ew02:
+139 382:  44 10                     outci #10
+140 384:  40                        ret
+141 385:                            ;;;;;;;;;;;;;;;;;;;;;;;;printTuples;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+142 385:                            ;;;;;;;;;;;;;;;;;;;;;;;;introPrint;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+143 385:                            introPrint:
+144 385:  8 51 5                    movmr iniState r5
+145 388:  8 52 6                    movmr iniHead r6
+146 391:  55 54                     outs welcomeMsg
+147 393:  44 10                     outci #10
+148 395:  44 10                     outci #10
+149 397:  39 304                    jsr printTuples
+150 399:  55 73                     outs iniStateMsg
+151 401:  49 5                      printi r5
+152 403:  44 10                     outci #10
+153 405:  55 89                     outs iniHeadMsg
+154 407:  49 6                      printi r6
+155 409:  44 10                     outci #10
+156 411:  55 109                    outs iniTapeMsg
+157 413:  55 0                      outs tape
+158 415:  44 10                     outci #10
+159 417:  44 10                     outci #10
+160 419:  40                        ret
+161 420:                            ;;;;;;;;;;;;;;;;;;;;;;;;introPrint;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+162 420:                            ;;;;;;;;;;;;;;;;;;;;;;;;endPrgrm;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+163 420:                            ; r6 holds the step count to print out
+164 420:                            endPrgrm:
+165 420:  8 53 6                    movmr stepCount r6
+166 423:  55 124                    outs finalMsg
+167 425:  44 10                     outci #10
+168 427:  55 153                    outs tapeMsg
+169 429:                            ;outci #10
+170 429:  55 0                      outs tape
+171 431:  44 10                     outci #10
+172 433:  55 166                    outs stepMsg
+173 435:  49 6                      printi r6
+174 437:  55 177                    outs stepMsg2
+175 439:  0                         halt
+176 440:                            ;;;;;;;;;;;;;;;;;;;;;;;;endPrgrm;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+177 440:                            .end
+
+Symbol Table:
+tuplesmsg 144
+main 200
+tapesize 50
+inistatemsg 73
+tupleamount 49
+tape 0
+stepmsg 166
+checkichar 246
+welcomemsg 54
+ew02 382
+introprint 385
+inihead 52
+add 274
+stepcount 53
+printtuples 304
+setdefaults 184
+stepmsg2 177
+inistate 51
+tapemsg 153
+linearsearch 206
+endprgrm 420
+initapemsg 109
+stepcounter 294
+finalmsg 124
+iniheadmsg 89
+checkicharcall 242
+dw02 326
+dw01 224
+tuples 9
+return 273
+Number Assembly Errors: 0
