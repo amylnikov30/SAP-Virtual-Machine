@@ -1,0 +1,276 @@
+.start main
+
+
+
+tape: .string "_XX.YYY+"
+
+ ;      cs ic ns oc d
+tuples: .tuple \0 _ 0 _ r\
+        .tuple \0 X 0 A r\
+        .tuple \0 . 0 . r\
+        .tuple \0 Y 0 B r\
+        .tuple \0 + 1 + l\
+        .tuple \1 B 1 D l\
+        .tuple \1 . 1 . l\
+        .tuple \1 A 1 C l\
+
+tupleAmount: .integer #8
+tapeSize:    .integer #8
+
+iniState:    .integer #0
+iniHead:     .integer #0
+
+stepCount:   .integer #0
+
+welcomeMsg:  .string "Welcome to Turing!"
+iniStateMsg: .string "Initial State: "
+iniHeadMsg:  .string "Initial Tape Head: "
+iniTapeMsg:  .string "Initial Tape: "
+
+
+finalMsg:    .string "Turing run complete"
+tuplesMsg:   .string "Tuples: "
+tapeMsg:     .string "Final Tape: "
+
+
+stepMsg:     .string "That took "
+stepMsg2:    .string " steps"
+
+setDefaults:
+    movmr iniState r5
+    movmr iniHead r6
+
+    addir #1 r6             ; 1 needs to be added because tape is a string (length goes first and then characters in a string)
+
+    movrr r5 r0             ; Set Initial State
+    movrr r6 r1             ; Set Initial Head (1 for beginning of tape)
+
+    ret
+
+main:
+    jsr introPrint
+
+    jsr setDefaults
+
+    jmp linearSearch
+
+
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;linearSearch;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+linearSearch:
+                            ; Set memory locations of the elements of the first tuple
+    movir #0  r2            ; Start count at 0
+    movir #9  r3            ; Set to the first element of the first tuple (current state)
+    movir #10 r4            ; Set to the input character
+    movir #11 r7            ; Set to the new state
+    movir #12 r8            ; Set to the output character
+    movir #13 r9            ; Set to the direction
+
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;linearSearch;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    dw01:
+        movxr r3 r5         ; Set actual current state
+        movxr r4 r6         ; Set actual input character
+
+        ; printi r9
+        ; outci #10
+
+        cmpmr tupleAmount r2 ;if tupleAmount == counter
+            jmpz endPrgrm   ;       go to endPrgrm
+
+
+        cmprr r0 r5         ; if currentState == tuple.currentState
+            jmpz checkICharCall  ;       checkIChar
+
+        jmp add
+
+    checkICharCall:
+        jsr checkIChar
+        jmp add
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;dw01;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;checkIChar;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; r5 holds the actual character on the tape
+    ; r5 will hold the new state and output character if input characters match
+
+    checkIChar:
+        movxr r1 r5         ; Set r5 to be the actual character on the tape
+
+
+        cmprr r5 r6         ; if inputCharacter != tuple.inputCharacter
+            jmpne return    ;       return;
+
+
+            movxr r7 r5     ;       Move new state into r5
+
+            movrr r5 r0     ;       Set the new state in r0
+
+
+
+            movxr r8 r5     ;       Move output character into r5
+
+            movrx r5 r1     ;       Set the character in tape[r1]
+
+            addxr r9 r1     ;       Move the head by whatever is in memory[r9]
+
+            jsr stepCounter
+
+            jmp linearSearch
+
+        return: ret         ;       return
+ ;;;;;;;;;;;;;;;;;;;;;;;;checkIChar;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;add;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    add:
+
+        addir #1 r2         ; Increment the count by 1
+
+        addir #5 r3         ; Increment location of the current state
+        addir #5 r4         ; Increment the location of the input character
+        addir #5 r7         ; Increment the location of the new state
+        addir #5 r8         ; Increment the location of the output character
+        addir #5 r9         ; Increment the location of the direction
+
+        jmp dw01
+ ;;;;;;;;;;;;;;;;;;;;;;;;add;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;stepCounter;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;r5 holds the stepCount
+    stepCounter:
+        movmr stepCount r5
+
+        addir #1 r5
+
+        movrm r5 stepCount
+
+        ret
+ ;;;;;;;;;;;;;;;;;;;;;;;;stepCounter;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;linearSearch;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;printTuples;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ; r0 holds the current tuple
+ ; r1 holds the memory location of the current state of the tuple
+ ; r2 holds the memory location of the input character of the tuple
+ ; r3 holds the memory location of the new state of the tuple
+ ; r4 holds the memory location of the output character of the tuple
+ ; r5 holds the memory location of the direction of the tuple
+ ; r6 holds the actual current state of the tuple
+ ; r7 holds the actual new state of the tuple
+ ; r8 holds the actual direction of the tuple
+
+printTuples:
+
+    movir #0  r0
+    movir #9  r1
+    movir #10 r2
+    movir #11 r3
+    movir #12 r4
+    movir #13 r5
+
+
+
+    outs tuplesMsg
+
+    outci #10
+
+
+    dw02:
+        movxr r1 r6
+        movxr r3 r7
+        movxr r5 r8
+
+        cmpmr tupleAmount r0
+            jmpz ew02
+
+        printi r6       ; Print out the current state
+        outci #32
+
+        outcx r2        ; Print out the input character
+        outci #32
+
+        printi r7       ; Print out the new state
+        outci #32
+
+        outcx r4        ; Print out the output character
+        outci #32
+
+        printi r8       ; Print out the direction
+        outci #32
+
+        outci #10
+
+        addir #1 r0
+        addir #5 r1
+        addir #5 r2
+        addir #5 r3
+        addir #5 r4
+        addir #5 r5
+
+        jmp dw02
+
+    ew02:
+        outci #10
+        ret
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;printTuples;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;introPrint;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+introPrint:
+
+    movmr iniState r5
+    movmr iniHead r6
+
+    outs welcomeMsg
+    outci #10
+    outci #10
+
+    jsr printTuples
+
+    outs iniStateMsg
+    printi r5
+    outci #10
+
+    outs iniHeadMsg
+    printi r6
+    outci #10
+
+    outs iniTapeMsg
+    outs tape
+    outci #10
+
+    outci #10
+
+    ret
+ ;;;;;;;;;;;;;;;;;;;;;;;;introPrint;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ ;;;;;;;;;;;;;;;;;;;;;;;;endPrgrm;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ; r6 holds the step count to print out
+endPrgrm:
+
+    movmr stepCount r6
+
+    outs finalMsg
+    outci #10
+
+    outs tapeMsg
+    ;outci #10
+
+    outs tape
+    outci #10
+
+    outs stepMsg
+    printi r6
+    outs stepMsg2
+
+    halt
+ ;;;;;;;;;;;;;;;;;;;;;;;;endPrgrm;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+.end
